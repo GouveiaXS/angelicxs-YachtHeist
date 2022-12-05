@@ -4,7 +4,9 @@ Hi all,
 I realized that there is a sever lack of free Yacht Heists availble for users to select from so I have gone ahead and provided you one.
 As usual this is ESX and QBCore compatable with an easy config to navigate. The dependencies can be changed/removed if you know what you are doing. Every step is synced so all users are able to hack/loot etc at the same time (unable to duplicate looting unless they are basically frame perfect)
 
+
 Youtube Preview: TBA
+
 
 Heist Overview:
 Users will talk to inital NPC to start heist.
@@ -18,6 +20,7 @@ If NOT using a third-eye system they will only be able to loot the trolley's wit
 If using a third-eye system they will be able to explore the ship for additional loot.
 
 After the aloted time entire boat will be reset and job can be done again.
+
 
 
 
