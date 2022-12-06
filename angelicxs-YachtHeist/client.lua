@@ -285,7 +285,10 @@ RegisterNetEvent('angelicxs-YachtHeist:Client:EngineLocations', function()
             local Sleep = 2000
             local Player = PlayerPedId()
             local Pos = GetEntityCoords(Player)
-            for engine, location in pairs (Engine3D) do 
+            local nearEngine = false
+            local data = {}
+            local location
+            for engine, v in pairs (Engine3D) do 
                 local allowed = true
                 local name = tostring('YachtEngine'..engine)
                 if name == 'YachtEngine1' and not E1 then
@@ -303,13 +306,19 @@ RegisterNetEvent('angelicxs-YachtHeist:Client:EngineLocations', function()
                         Sleep = 500
                         if Dist <= 3 then
                             Sleep = 0
-                            DrawText3Ds(v.Coords[1],v.Coords[2],v.Coords[3], Config.Lang['EngineDisable'])
-                            if IsControlJustReleased(0, 38) then
-                                local data = {engine, name}
-                                TriggerEvent('angelicxs-YachtHeist:DisableEngine', data)
-                            end
+                            nearEngine = true
+                            data.name = name
+                            data.engine = engine
+                            location = v
+                            break
                         end
                     end
+                end
+            end
+            if nearEngine then
+                DrawText3Ds(location.Coords[1],location.Coords[2],location.Coords[3], Config.Lang['EngineDisable'])
+                if IsControlJustReleased(0, 38) then
+                    TriggerEvent('angelicxs-YachtHeist:DisableEngine', data)
                 end
             end
             Wait(Sleep)
