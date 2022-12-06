@@ -62,7 +62,7 @@ end)
 CreateThread(function()
     if Config.UseESX then
         while ESX == nil do
-            TriggerEvent('esx:getSharedObject', function(obj) ESX = obj end)
+            ESX = exports["es_extended"]:getSharedObject()
             Wait(0)
         end
     
