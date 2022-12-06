@@ -1,10 +1,9 @@
-ESX = nil
 QBcore = nil
 local CD = Config.Cooldown
 
 
 if Config.UseESX then
-    TriggerEvent('esx:getSharedObject', function(obj) ESX = obj end)
+    ESX = exports["es_extended"]:getSharedObject()
     TriggerEvent('qs-core:getSharedObject', function(obj) QS = obj end)
 
     ESX.RegisterServerCallback('angelicxs-YachtHeist:PoliceAvailable:ESX',function(source,cb)
