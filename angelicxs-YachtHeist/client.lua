@@ -355,16 +355,14 @@ RegisterNetEvent('angelicxs-YachtHeist:Client:EngineSync', function(name, disabl
     if Config.UseThirdEye then
         exports[Config.ThirdEyeName]:RemoveZone(name)
     end
-    if Config.Use3DText then
-        if name == 'YachtEngine1' then
-            E1 = false
-        elseif name == 'YachtEngine2' then
-            E2 = false
-        elseif name == 'YachtEngine3' then
-            E3 = false
-        elseif name == 'YachtEngine4' then
-            E4 = false
-        end
+    if name == 'YachtEngine1' then
+        E1 = false
+    elseif name == 'YachtEngine2' then
+        E2 = false
+    elseif name == 'YachtEngine3' then
+        E3 = false
+    elseif name == 'YachtEngine4' then
+        E4 = false
     end
     EngineDisabled = disabled
     TriggerEvent('angelicxs-YachtHeist:Console')
