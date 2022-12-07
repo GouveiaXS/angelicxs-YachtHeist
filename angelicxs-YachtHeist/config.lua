@@ -11,7 +11,7 @@
 Config = {}
 
 
-Config.UseESX = false						-- Use ESX Framework
+Config.UseESX = false						-- Use ESX Framework (GO TO FXMANIFEST AND UNCOMMENT '@es_extended/imports.lua' )
 Config.UseQBCore = true					-- Use QBCore Framework (Ignored if Config.UseESX = true)
 
 Config.UseCustomNotify = false				-- Use a custom notification script, must complete event below.
