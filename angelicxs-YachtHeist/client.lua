@@ -574,9 +574,9 @@ function TrollyLoot3D(k)
             local TDist = #(pos - TCoord)
             if TDist < 30 then 
                 Sleep = 500
-                if trolleyDist < 5 then
+                if TDist < 5 then
                     Sleep = 0
-                    if trolleyDist < 2 then
+                    if TDist < 2 then
                         DrawText3Ds(trolleys[k]['coords'].x, trolleys[k]['coords'].y, trolleys[k]['coords'].z + 1, Config.Lang['lootTrolly3d'])
                         if IsControlJustPressed(0, 38) then
                             TriggerEvent("angelicxs-YachtHeist:LootTrolly")
