@@ -157,6 +157,7 @@ Config.Lang = {
     ['working'] = 'Someone is working the yacht job right now.',
     ['mincops'] = 'No risk, no reward. Come back later!',
 	['EngineDisable'] = "Attempt to disable engine!",
+	['activeConsole'] = "The engines are down, activate the console at the back of the engine room!",
 	['ReleaseTrolly'] = "Release Money Carts",
 	['requestTrolley'] = 'Press ~r~[E]~w~ to release money carts.',
 	['ReleaseedTrolly'] = 'Security systems are down!',
