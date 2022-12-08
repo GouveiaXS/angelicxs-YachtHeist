@@ -219,6 +219,7 @@ RegisterNetEvent('angelicxs-YachtHeist:RobberyCheck', function()
         else
             GlobalJob = true
             TriggerEvent('angelicxs-YachtHeist:Client:HeistStart')
+            TriggerEvent('angelicxs-YachtHeist:Notify', Config.Lang['startHeist'], Config.LangType['info'])
         end
     else
         TriggerEvent('angelicxs-YachtHeist:Notify', Config.Lang['working'], Config.LangType['error'])
@@ -339,6 +340,9 @@ RegisterNetEvent('angelicxs-YachtHeist:DisableEngine', function(data)
         if success then
             local Destroyed = EngineDisabled + 1
             TriggerServerEvent('angelicxs-YachtHeist:Server:EngineSync',data.name, Destroyed)
+	    if Destroyed == 4 then
+                TriggerEvent('angelicxs-YachtHeist:Notify', Config.Lang['activeConsole'], Config.LangType['info'])
+            end
         else
             TriggerServerEvent('angelicxs-YachtHeist:server:EngineWine', GetEntityCoords(PlayerPedId()))
         end
