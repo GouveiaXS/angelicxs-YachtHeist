@@ -14,6 +14,7 @@ local E3 = false
 local E4 = false
 local PAlert = false
 local xSound = exports.xsound
+local oxTargets = {}
 
 
 local EngineTarget = {
@@ -172,21 +173,33 @@ RegisterNetEvent('angelicxs-YachtHeist:SpawnNPC',function(coords,model)
     TaskStartScenarioInPlace(StartNPC,'WORLD_HUMAN_STAND_IMPATIENT', 0, false)
     SetModelAsNoLongerNeeded(model)
     if Config.UseThirdEye then
-        exports[Config.ThirdEyeName]:AddEntityZone('YachtNPC', StartNPC, {
-            name="YachtNPC",
-            debugPoly=false,
-            useZ = true
-              }, {
-              options = {
+        if Config.ThirdEyeName == 'ox_target' then
+            local options = {
                 {
-                event = 'angelicxs-YachtHeist:RobberyCheck',
-                icon = 'fas fa-ship',
-                label = Config.Lang['AskJob'],
+                    name = 'YachtNPC',
+                    event = 'angelicxs-YachtHeist:RobberyCheck',
+                    icon = 'fas fa-ship',
+                    label = Config.Lang['AskJob'],
                 },
-                
-              },
-            distance = 2
-        })        
+            }
+            exports.ox_target:addLocalEntity(StartNPC, options)
+        else
+            exports[Config.ThirdEyeName]:AddEntityZone('YachtNPC', StartNPC, {
+                name="YachtNPC",
+                debugPoly=false,
+                useZ = true
+                }, {
+                options = {
+                    {
+                    event = 'angelicxs-YachtHeist:RobberyCheck',
+                    icon = 'fas fa-ship',
+                    label = Config.Lang['AskJob'],
+                    },
+                    
+                },
+                distance = 2
+            })        
+        end
     end
 end)
 
@@ -258,24 +271,43 @@ end)
 RegisterNetEvent('angelicxs-YachtHeist:Client:EngineLocations', function()
     if Config.UseThirdEye then
         for engine, location in pairs (EngineTarget) do 
-             exports[Config.ThirdEyeName]:AddBoxZone('YachtEngine'..engine, location, 5, 4, {
-                name='YachtEngine'..engine,
-                heading = 69.0,
-                debugPoly=false,
-				minZ = 1.58,
-				maxZ = 4.56
-            }, {
-                options = {
-                    {
-                    event = 'angelicxs-YachtHeist:DisableEngine',
-                    icon = 'fas fa-engine',
-                    label = Config.Lang['EngineDisable'],
-                    engine = engine,
-                    name = 'YachtEngine'..engine
+            if Config.ThirdEyeName == 'ox_target' then
+                oxTargets['YachtEngine'..engine] = exports.ox_target:addBoxZone({
+                    coords = location,
+                    size = vec3(5, 4, 3),
+                    rotation = 69,
+                    debug = drawZones,
+                    options = {
+                        {
+                            name = 'YachtEngine'..engine,
+                            event = 'angelicxs-YachtHeist:DisableEngine',
+                            icon = 'fas fa-engine',
+                            label = Config.Lang['EngineDisable'],
+                            engine = engine,
+                            name = 'YachtEngine'..engine
+                        }
+                    }
+                })
+            else
+                exports[Config.ThirdEyeName]:AddBoxZone('YachtEngine'..engine, location, 5, 4, {
+                    name='YachtEngine'..engine,
+                    heading = 69.0,
+                    debugPoly=false,
+                    minZ = 1.58,
+                    maxZ = 4.56
+                }, {
+                    options = {
+                        {
+                        event = 'angelicxs-YachtHeist:DisableEngine',
+                        icon = 'fas fa-engine',
+                        label = Config.Lang['EngineDisable'],
+                        engine = engine,
+                        name = 'YachtEngine'..engine
+                        },
                     },
-                },
-                distance = 2.5
-            })     
+                    distance = 2.5
+                })     
+            end
         end 
     elseif Config.Use3DText then
         while true do 
@@ -353,7 +385,11 @@ end)
 RegisterNetEvent('angelicxs-YachtHeist:Client:EngineSync', function(name, disabled)
     if name == nil then return end
     if Config.UseThirdEye then
-        exports[Config.ThirdEyeName]:RemoveZone(name)
+        if Config.ThirdEyeName == 'ox_target' then
+            exports.ox_target:removeZone(oxTargets[name])
+        else
+            exports[Config.ThirdEyeName]:RemoveZone(name)
+        end
     end
     if name == 'YachtEngine1' then
         E1 = false
@@ -371,23 +407,41 @@ end)
 RegisterNetEvent('angelicxs-YachtHeist:Console', function()
     if EngineDisabled == 4 then
         if Config.UseThirdEye then
+            if Config.ThirdEyeName == 'ox_target' then
+                oxTargets['YachtEngineConsole'] = exports.ox_target:addBoxZone({
+                    coords = Console,
+                    size = vec3(3, 2, 3),
+                    rotation = 74,
+                    debug = drawZones,
+                    options = {
+                        {
+                            name = 'YachtEngineConsole',
+                            event = 'angelicxs-YachtHeist:ReleaseTrolly',
+                            icon = 'fas fa-terminal',
+                            label = Config.Lang['ReleaseTrolly'],
+                            temp = 'trap'
+                        }
+                    }
+                })
+            else
                 exports[Config.ThirdEyeName]:AddBoxZone('YachtEngineConsole', Console, 3, 2, {
-                name='YachtEngineConsole',
-                heading = 74.0,
-                debugPoly=false,
-                minZ = 1.58,
-                maxZ = 4.56
-                }, {
-                options = {
-                    {
-                    event = 'angelicxs-YachtHeist:ReleaseTrolly',
-                    icon = 'fas fa-terminal',
-                    label = Config.Lang['ReleaseTrolly'],
-                    temp = 'trap'
+                    name='YachtEngineConsole',
+                    heading = 74.0,
+                    debugPoly=false,
+                    minZ = 1.58,
+                    maxZ = 4.56
+                    }, {
+                    options = {
+                        {
+                        event = 'angelicxs-YachtHeist:ReleaseTrolly',
+                        icon = 'fas fa-terminal',
+                        label = Config.Lang['ReleaseTrolly'],
+                        temp = 'trap'
+                        },
                     },
-                },
-                distance = 2.5
-            })
+                    distance = 2.5
+                })
+            end
         end
         while Config.Use3DText do 
             local Sleep = 2000
@@ -440,7 +494,11 @@ end)
 
 RegisterNetEvent('angelicxs-YachtHeist:Client:TrolleySync', function(loc, k, model)
     if Config.UseThirdEye then
-        exports[Config.ThirdEyeName]:RemoveZone("YachtEngineConsole")
+        if Config.ThirdEyeName == 'ox_target' then
+            exports.ox_target:removeZone(oxTargets['YachtEngineConsole'])
+        else
+            exports[Config.ThirdEyeName]:RemoveZone("YachtEngineConsole")
+        end
     end
     if not loc or not k or not model then
         TriggerServerEvent('angelicxs-YachtHeist:ThatIsAThing')
@@ -464,12 +522,68 @@ RegisterNetEvent('angelicxs-YachtHeist:Client:TrolleySync', function(loc, k, mod
     if Config.UseThirdEye then
         for i = 1, #Config.BonusLootSpots do
             local nameSpot = tostring(Config.BonusLootSpots[i])
-            exports[Config.ThirdEyeName]:AddBoxZone(nameSpot, Config.BonusLootSpots[i], 1.5, 1.5, {
-                name = nameSpot,
+            if Config.ThirdEyeName == 'ox_target' then
+                oxTargets[nameSpot] = exports.ox_target:addBoxZone({
+                    coords = Config.BonusLootSpots[i],
+                    size = vec3(1.5, 1.5, 3),
+                    rotation = 0,
+                    debug = drawZones,
+                    options = {
+                        {
+                            name = nameSpot,
+                            event = 'angelicxs-YachtHeist:BonusLoot',
+                            icon = 'fas fa-hand',
+                            label = Config.Lang['lootTrolly'],
+                            amount = 'trapcard',
+                            temp = nameSpot,
+                        }
+                    }
+                })
+            else
+                exports[Config.ThirdEyeName]:AddBoxZone(nameSpot, Config.BonusLootSpots[i], 1.5, 1.5, {
+                    name = nameSpot,
+                    heading = 0.0,
+                    debugPoly=false,
+                    minZ = Config.BonusLootSpots[i].z-1.5,
+                    maxZ = Config.BonusLootSpots[i].z+1.5,
+                    }, {
+                    options = {
+                        {
+                        event = 'angelicxs-YachtHeist:BonusLoot',
+                        icon = 'fas fa-hand',
+                        label = Config.Lang['lootTrolly'],
+                        amount = 'trapcard',
+                        temp = nameSpot,
+                        },
+                    },
+                    distance = 2.5
+                })
+            end
+        end
+        if Config.ThirdEyeName == 'ox_target' then
+            oxTargets['YachtRareSpot'] = exports.ox_target:addBoxZone({
+                coords = Config.RareLootSpot,
+                size = vec3(1.5, 1.5, 3),
+                rotation = 0,
+                debug = drawZones,
+                options = {
+                    {
+                        name = 'YachtRareSpot',
+                        event = 'angelicxs-YachtHeist:BonusLoot',
+                        icon = 'fas fa-hand',
+                        label = Config.Lang['lootTrolly'],
+                        amount = 'trapcard',
+                        temp = "YachtRareSpot",
+                    }
+                }
+            })
+        else
+            exports[Config.ThirdEyeName]:AddBoxZone("YachtRareSpot", Config.RareLootSpot, 1.5, 1.5, {
+                name= "YachtRareSpot",
                 heading = 0.0,
                 debugPoly=false,
-                minZ = Config.BonusLootSpots[i].z-1.5,
-                maxZ = Config.BonusLootSpots[i].z+1.5,
+                minZ = Config.RareLootSpot.z-1.5,
+                maxZ = Config.RareLootSpot.z+1.5,
                 }, {
                 options = {
                     {
@@ -477,36 +591,22 @@ RegisterNetEvent('angelicxs-YachtHeist:Client:TrolleySync', function(loc, k, mod
                     icon = 'fas fa-hand',
                     label = Config.Lang['lootTrolly'],
                     amount = 'trapcard',
-                    temp = nameSpot,
+                    temp = "YachtRareSpot",
                     },
                 },
                 distance = 2.5
             })
         end
-        exports[Config.ThirdEyeName]:AddBoxZone("YachtRareSpot", Config.RareLootSpot, 1.5, 1.5, {
-            name= "YachtRareSpot",
-            heading = 0.0,
-            debugPoly=false,
-            minZ = Config.RareLootSpot.z-1.5,
-            maxZ = Config.RareLootSpot.z+1.5,
-            }, {
-            options = {
-                {
-                event = 'angelicxs-YachtHeist:BonusLoot',
-                icon = 'fas fa-hand',
-                label = Config.Lang['lootTrolly'],
-                amount = 'trapcard',
-                temp = "YachtRareSpot",
-                },
-            },
-            distance = 2.5
-        })
     end
 end)
 
 RegisterNetEvent('angelicxs-YachtHeist:Client:ThirdEyeSync', function(data)
     if data then
-        exports[Config.ThirdEyeName]:RemoveZone(data)
+        if Config.ThirdEyeName == 'ox_target' then
+            exports.ox_target:removeZone(oxTargets[data])
+        else
+            exports[Config.ThirdEyeName]:RemoveZone(data)
+        end
     end
 end)
 
@@ -548,23 +648,40 @@ end
 function TrollyLoot3D(k)
     local TCoord = vector3(trolleys[k]['coords'].x, trolleys[k]['coords'].y, trolleys[k]['coords'].z)
     if Config.UseThirdEye then
-        exports[Config.ThirdEyeName]:AddBoxZone('Trolley'..k, TCoord, 0.9, 1.1, {  
-            name = 'Trolley'..k, 
-            heading = trolleys[k]['coords'].w,
-            debugPoly = false,
-            minZ = trolleys[k]['coords'].z-1,
-            maxZ = trolleys[k]['coords'].z+1.5,
-            }, {
-            options = { 
-                { 
-                    type = 'client',
-                    event = 'angelicxs-YachtHeist:LootTrolly',
-                    icon = 'fas fa-hand-paper',
-                    label = Config.Lang['lootTrolly'],
+        if Config.ThirdEyeName == 'ox_target' then
+            oxTargets['Trolley'..k] = exports.ox_target:addBoxZone({
+                coords = TCoord,
+                size = vec3(0.9, 1.1, 2.5),
+                rotation = trolleys[k]['coords'].w,
+                debug = drawZones,
+                options = {
+                    {
+                        name = 'Trolley'..k,
+                        event = 'angelicxs-YachtHeist:LootTrolly',
+                        icon = 'fas fa-hand-paper',
+                        label = Config.Lang['lootTrolly'],
+                    }
                 }
-            },
-            distance = 2,
-        })
+            })
+        else
+            exports[Config.ThirdEyeName]:AddBoxZone('Trolley'..k, TCoord, 0.9, 1.1, {  
+                name = 'Trolley'..k, 
+                heading = trolleys[k]['coords'].w,
+                debugPoly = false,
+                minZ = trolleys[k]['coords'].z-1,
+                maxZ = trolleys[k]['coords'].z+1.5,
+                }, {
+                options = { 
+                    { 
+                        type = 'client',
+                        event = 'angelicxs-YachtHeist:LootTrolly',
+                        icon = 'fas fa-hand-paper',
+                        label = Config.Lang['lootTrolly'],
+                    }
+                },
+                distance = 2,
+            })
+        end
     end
     if Config.Use3DText then
         while true do
@@ -595,7 +712,11 @@ end
 RegisterNetEvent('angelicxs-YachtHeist:Client:LootSync', function(k)
     if k then 
         if Config.UseThirdEye then
-            exports[Config.ThirdEyeName]:RemoveZone('Trolley'..k)
+            if Config.ThirdEyeName == 'ox_target' then
+                exports.ox_target:removeZone(oxTargets['Trolley'..k])
+            else
+                exports[Config.ThirdEyeName]:RemoveZone('Trolley'..k)
+            end
         end
         trolleys[k]['grabbed'] = true
     end
@@ -714,13 +835,25 @@ RegisterNetEvent('angelicxs-YachtHeist:Reset', function(tolerance)
     if tolerance == 'ok' then
         GlobalJob = false
         if Config.UseThirdEye then
-            for engine, location in pairs (EngineTarget) do 
-                exports[Config.ThirdEyeName]:RemoveZone('YachtEngine'..engine)
+            if Config.ThirdEyeName == 'ox_target' then
+                for engine, location in pairs (EngineTarget) do 
+                    exports.ox_target:removeZone(oxTargets['YachtEngine'..engine])
+                end
+                for i = 1, #Config.BonusLootSpots do
+                    exports.ox_target:removeZone(oxTargets[Config.BonusLootSpots[i]])
+                end
+                exports.ox_target:removeZone(oxTargets["YachtRareSpot"])
+                exports.ox_target:removeZone(oxTargets["YachtEngineConsole"])
+            else
+                for engine, location in pairs (EngineTarget) do 
+                    exports[Config.ThirdEyeName]:RemoveZone('YachtEngine'..engine)
+                end
+                for i = 1, #Config.BonusLootSpots do
+                    exports[Config.ThirdEyeName]:RemoveZone(Config.BonusLootSpots[i])
+                end
+                exports[Config.ThirdEyeName]:RemoveZone("YachtRareSpot")
+                exports[Config.ThirdEyeName]:RemoveZone("YachtEngineConsole")    
             end
-            for i = 1, #Config.BonusLootSpots do
-                exports[Config.ThirdEyeName]:RemoveZone(Config.BonusLootSpots[i])
-            end
-            exports[Config.ThirdEyeName]:RemoveZone("YachtRareSpot")
         end
         if DoesEntityExist(Trolley1) then
             DeleteEntity(Trolley1)
@@ -801,15 +934,26 @@ AddEventHandler('onResourceStop', function(resource)
             DeleteEntity(StartNPC)
         end 
         if Config.UseThirdEye then
-            exports[Config.ThirdEyeName]:RemoveZone('YachtNPC')
-            for engine, location in pairs (EngineTarget) do 
-                exports[Config.ThirdEyeName]:RemoveZone('YachtEngine'..engine)
-            end
-            for i = 1, #Config.BonusLootSpots do
-                exports[Config.ThirdEyeName]:RemoveZone(Config.BonusLootSpots[i])
-            end
-            exports[Config.ThirdEyeName]:RemoveZone("YachtRareSpot")
-            exports[Config.ThirdEyeName]:RemoveZone("YachtEngineConsole")           
+            if Config.ThirdEyeName == 'ox_target' then
+                for engine, location in pairs (EngineTarget) do 
+                    exports.ox_target:removeZone(oxTargets['YachtEngine'..engine])
+                end
+                for i = 1, #Config.BonusLootSpots do
+                    exports.ox_target:removeZone(oxTargets[Config.BonusLootSpots[i]])
+                end
+                exports.ox_target:removeZone(oxTargets["YachtRareSpot"])
+                exports.ox_target:removeZone(oxTargets["YachtEngineConsole"])
+            else
+                exports[Config.ThirdEyeName]:RemoveZone('YachtNPC')
+                for engine, location in pairs (EngineTarget) do 
+                    exports[Config.ThirdEyeName]:RemoveZone('YachtEngine'..engine)
+                end
+                for i = 1, #Config.BonusLootSpots do
+                    exports[Config.ThirdEyeName]:RemoveZone(Config.BonusLootSpots[i])
+                end
+                exports[Config.ThirdEyeName]:RemoveZone("YachtRareSpot")
+                exports[Config.ThirdEyeName]:RemoveZone("YachtEngineConsole")    
+            end       
         end
         if DoesEntityExist(Trolley1) then
             DeleteEntity(Trolley1)
