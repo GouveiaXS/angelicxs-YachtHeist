@@ -136,7 +136,11 @@ CreateThread(function()
                 DeleteEntity(StartNPC)
                 PedSpawned = false
                 if Config.UseThirdEye then
-                    exports[Config.ThirdEyeName]:RemoveZone('YachtNPC')
+		        if Config.ThirdEyeName == 'ox_target' then
+            			exports.ox_target:removeZone('YachtNPC')
+        		else
+            			exports[Config.ThirdEyeName]:RemoveZone('YachtNPC')
+        		end
                 end
             end
         end
