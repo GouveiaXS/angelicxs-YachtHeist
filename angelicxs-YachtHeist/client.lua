@@ -525,7 +525,7 @@ RegisterNetEvent('angelicxs-YachtHeist:Client:TrolleySync', function(loc, k, mod
     end
     if Config.UseThirdEye then
         for i = 1, #Config.BonusLootSpots do
-            local nameSpot = tostring(Config.BonusLootSpots[i])
+            local nameSpot = tostring('bonusloot'..Config.BonusLootSpots[i])
             if Config.ThirdEyeName == 'ox_target' then
                 oxTargets[nameSpot] = exports.ox_target:addBoxZone({
                     coords = Config.BonusLootSpots[i],
@@ -943,7 +943,7 @@ AddEventHandler('onResourceStop', function(resource)
                     exports.ox_target:removeZone(oxTargets['YachtEngine'..engine])
                 end
                 for i = 1, #Config.BonusLootSpots do
-                    exports.ox_target:removeZone(oxTargets[Config.BonusLootSpots[i]])
+                    exports.ox_target:removeZone(oxTargets['bonusloot'..Config.BonusLootSpots[i]])
                 end
                 exports.ox_target:removeZone(oxTargets["YachtRareSpot"])
                 exports.ox_target:removeZone(oxTargets["YachtEngineConsole"])
@@ -953,7 +953,7 @@ AddEventHandler('onResourceStop', function(resource)
                     exports[Config.ThirdEyeName]:RemoveZone('YachtEngine'..engine)
                 end
                 for i = 1, #Config.BonusLootSpots do
-                    exports[Config.ThirdEyeName]:RemoveZone(Config.BonusLootSpots[i])
+                    exports[Config.ThirdEyeName]:RemoveZone('bonusloot'..Config.BonusLootSpots[i])
                 end
                 exports[Config.ThirdEyeName]:RemoveZone("YachtRareSpot")
                 exports[Config.ThirdEyeName]:RemoveZone("YachtEngineConsole")    
