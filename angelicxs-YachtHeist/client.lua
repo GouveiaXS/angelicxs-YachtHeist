@@ -838,6 +838,7 @@ end)
 RegisterNetEvent('angelicxs-YachtHeist:Reset', function(tolerance)
     if tolerance == 'ok' then
         GlobalJob = false
+	PAlert = false
         if Config.UseThirdEye then
             if Config.ThirdEyeName == 'ox_target' then
                 for engine, location in pairs (EngineTarget) do 
