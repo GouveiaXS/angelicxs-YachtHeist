@@ -507,6 +507,7 @@ RegisterNetEvent('angelicxs-YachtHeist:Client:TrolleySync', function(loc, k, mod
     if not loc or not k or not model then
         TriggerServerEvent('angelicxs-YachtHeist:ThatIsAThing')
     end
+	loadModel(model)
     if k == 1 then
         TrollyUp = true
         Trolley1 = CreateObject(model, loc.x, loc.y, loc.z, 1, 0, 0)
@@ -523,6 +524,7 @@ RegisterNetEvent('angelicxs-YachtHeist:Client:TrolleySync', function(loc, k, mod
         TriggerServerEvent('angelicxs-YachtHeist:ThatIsAThing')
         return
     end
+	SetModelAsNoLongerNeeded(model)
     if Config.UseThirdEye then
         for i = 1, #Config.BonusLootSpots do
             local nameSpot = tostring('bonusloot'..Config.BonusLootSpots[i])
@@ -688,28 +690,30 @@ function TrollyLoot3D(k)
         end
     end
     if Config.Use3DText then
-        while true do
-            local ped = PlayerPedId()
-            local pos = GetEntityCoords(ped)
-            local Sleep = 2000
-            local TDist = #(pos - TCoord)
-            if TDist < 30 then 
-                Sleep = 500
-                if TDist < 5 then
-                    Sleep = 0
-                    if TDist < 2 then
-                        DrawText3Ds(trolleys[k]['coords'].x, trolleys[k]['coords'].y, trolleys[k]['coords'].z + 1, Config.Lang['lootTrolly3d'])
-                        if IsControlJustPressed(0, 38) then
-                            TriggerEvent("angelicxs-YachtHeist:LootTrolly")
-                        end
-                    end
-                end
-            end
-            if not GlobalJob or trolleys[k]['grabbed'] then
-                break
-            end
-            Wait(Sleep)
-        end
+	CreateThread(function()
+	        while true do
+	            local ped = PlayerPedId()
+	            local pos = GetEntityCoords(ped)
+	            local Sleep = 2000
+	            local TDist = #(pos - TCoord)
+	            if TDist < 30 then 
+	                Sleep = 500
+	                if TDist < 5 then
+	                    Sleep = 0
+	                    if TDist < 2 then
+	                        DrawText3Ds(trolleys[k]['coords'].x, trolleys[k]['coords'].y, trolleys[k]['coords'].z + 1, Config.Lang['lootTrolly3d'])
+	                        if IsControlJustPressed(0, 38) then
+	                            TriggerEvent("angelicxs-YachtHeist:LootTrolly")
+	                        end
+	                    end
+	                end
+	            end
+	            if not GlobalJob or trolleys[k]['grabbed'] then
+	                break
+	            end
+	            Wait(Sleep)
+	        end
+	end)
     end
 end
 
