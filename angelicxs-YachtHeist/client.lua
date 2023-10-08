@@ -8,47 +8,33 @@ local StartNPC
 local PedSpawned = false
 local GlobalJob = false
 local EngineDisabled = 0
-local E1 = false
-local E2 = false
-local E3 = false
-local E4 = false
 local PAlert = false
 local xSound = exports.xsound
-local oxTargets = {}
-
-
-local EngineTarget = {
-    [1] = vector3(-2042.64, -1035.6, 2.48),
-    [2] = vector3(-2040.72, -1028.62, 2.23),
-    [3] = vector3(-2033.61, -1031.0, 2.58),
-    [4] = vector3(-2035.83, -1037.88, 2.17)
-}
-local Engine3D = {
-    [1] = {Coords = vector3(-2030.55, -1032.09, 2.56),},
-    [2] = {Coords = vector3(-2032.85, -1038.91, 2.56),},
-    [3] = {Coords = vector3(-2037.9, -1029.63, 2.58),},
-    [4] = {Coords = vector3(-2040.32, -1036.54, 2.59),},
+local EngineData = {
+    E1 = {coord = vector3(-2042.64, -1035.6, 2.48), text = vector3(-2040.32, -1036.54, 2.59), active = false},
+    E2 = {coord = vector3(-2040.72, -1028.62, 2.23), text = vector3(-2037.9, -1029.63, 2.58), active = false},
+    E3 = {coord = vector3(-2033.61, -1031.0, 2.58), text = vector3(-2030.55, -1032.09, 2.56), active = false},
+    E4 = {coord = vector3(-2035.83, -1037.88, 2.17), text = vector3(-2032.85, -1038.91, 2.56), active = false},
 }
 
+
+local RareLoot = false
 local Console = vector3(-2068.78, -1022.93, 3.06)
-
 local TrollyUp = false
 local Trolley1 = nil
 local Trolley2 = nil
 local trolleys = {
     [1] = {
         coords = vector4(-2051.54, -1025.68, 7.97, 251.63),
-        grabbed = false,
+        active = false,
         model = nil
     },
     [2] = {
         coords = vector4(-2055.65, -1031.03, 7.97, 224.24),
-        grabbed = false,
+        active = false,
         model = nil
     },
 },
-
-
 
 RegisterNetEvent('angelicxs-YachtHeist:Notify', function(message, type)
 	if Config.UseCustomNotify then
@@ -119,6 +105,230 @@ CreateThread(function()
 		AddTextComponentString(Config.StartBlipText)
 		EndTextCommandSetBlipName(blip)
 	end
+    if Config.UseThirdEye then
+        if Config.ThirdEyeName == 'ox_target' then
+            local ox_options2 = {
+                event = 'angelicxs-YachtHeist:ReleaseTrolly',
+                icon = 'fas fa-terminal',
+                label = Config.Lang['ReleaseTrolly'],
+                temp = 'trap',
+                canInteract = function()
+                    return TrollyUp
+                end,
+            },
+            exports.ox_target:addBoxZone({
+                coords = Console,
+                size = vec3(3, 2, 3),
+                rotation = 74,
+                debug = drawZones,
+                options = ox_options2,
+            })
+            for Engine, Data in pairs (EngineData) do 
+                local ox_options = {
+                    event = 'angelicxs-YachtHeist:DisableEngine',
+                    icon = 'fas fa-engine',
+                    label = Config.Lang['EngineDisable'],
+                    engine = Engine,
+                    canInteract = function()
+                        return Data.active
+                    end,
+                },
+                exports.ox_target:addBoxZone({
+                    coords = Data.coord,
+                    size = vec3(5, 4, 3),
+                    rotation = 69,
+                    debug = drawZones,
+                    options = ox_options,
+                })
+            end
+            for k, Data in pairs(trolleys) do 
+                exports.ox_target:addBoxZone({
+                    coords = vector3(Data.coords.x, Data.coords.y, Data.coords.z),
+                    size = vec3(0.9, 1.1, 2.5),
+                    rotation = Data.coords.w,
+                    debug = drawZones,
+                    options = {
+                        {
+                            name = 'Trolley'..k,
+                            event = 'angelicxs-YachtHeist:LootTrolly',
+                            icon = 'fas fa-hand-paper',
+                            label = Config.Lang['lootTrolly'],
+                            canInteract = function()
+                                return Data.active
+                            end,
+                        }
+                    }
+                })
+            end
+            for Number, Data in pairs (Config.BonusLootSpots) do 
+                local ox_options = {
+                    icon = 'fas fa-engine',
+                    label = Config.Lang['lootTrolly'],
+                    canInteract = function()
+                        return Data.active
+                    end,
+                    onSelect = function()
+                        BonusLoot(Number)
+                    end,
+                },
+                exports.ox_target:addBoxZone({
+                    coords = Data.coord,
+                    size = vec3(1.5, 1.5, 3),
+                    rotation = 0,
+                    debug = drawZones,
+                    options = ox_options,
+                })
+            end
+            exports.ox_target:addBoxZone({
+                coords = Config.RareLootSpot,
+                size = vec3(1.5, 1.5, 3),
+                rotation = 0,
+                debug = drawZones,
+                options = {
+                    {
+                        name = 'YachtRareSpot',
+                        icon = 'fas fa-hand',
+                        label = Config.Lang['lootTrolly'],
+                        canInteract = function()
+                            return RareLoot
+                        end,
+                        onSelect = function()
+                            BonusLoot("YachtRareSpot")
+                        end,
+                    }
+                }
+            })
+        else
+            for Engine, Data in pairs (EngineData) do 
+                exports[Config.ThirdEyeName]:AddBoxZone('YachtEngine'..Engine, Data.coord, 5, 4, {
+                    name='YachtEngine'..Engine,
+                    heading = 69.0,
+                    debugPoly=false,
+                    minZ = 1.58,
+                    maxZ = 4.56
+                }, {
+                    options = {
+                        {
+                        event = 'angelicxs-YachtHeist:DisableEngine',
+                        icon = 'fas fa-engine',
+                        label = Config.Lang['EngineDisable'],
+                        engine = Engine,
+                        canInteract = function()
+                            return Data.active
+                        end,
+                        },
+                    },
+                    distance = 2.5
+                })  
+            end
+            for Number, Data in pairs (Config.BonusLootSpots) do 
+                local nameSpot = tostring(Data.coord)
+                exports[Config.ThirdEyeName]:AddBoxZone(nameSpot, Data.coord, 1.5, 1.5, {
+                    name = nameSpot,
+                    heading = 0.0,
+                    debugPoly=false,
+                    minZ = Data.coord.z-1.5,
+                    maxZ = Data.coord.z+1.5,
+                    }, {
+                    options = {
+                        {
+                        icon = 'fas fa-hand',
+                        label = Config.Lang['lootTrolly'],
+                        canInteract = function()
+                            return Data.active
+                        end,
+                        action = function()
+                            BonusLoot(Number)
+                        end,
+                        },
+                    },
+                    distance = 2.5
+                })
+            end
+            for k, Data in pairs(trolleys) do 
+                exports[Config.ThirdEyeName]:AddBoxZone('Trolley'..k, vector3(Data.coords.x, Data.coords.y, Data.coords.z), 0.9, 1.1, {  
+                    name = 'Trolley'..k, 
+                    heading = Data.coords.w,
+                    debugPoly = false,
+                    minZ = Data.coords.z-1,
+                    maxZ = Data.coords.z+1.5,
+                    }, {
+                    options = { 
+                        { 
+                            type = 'client',
+                            event = 'angelicxs-YachtHeist:LootTrolly',
+                            icon = 'fas fa-hand-paper',
+                            label = Config.Lang['lootTrolly'],
+                            canInteract = function()
+                                return Data.active
+                            end,
+                        }
+                    },
+                    distance = 2,
+                })
+            end
+            exports[Config.ThirdEyeName]:AddBoxZone('YachtEngineConsole', Console, 3, 2, {
+                name='YachtEngineConsole',
+                heading = 74.0,
+                debugPoly=false,
+                minZ = 1.58,
+                maxZ = 4.56
+                }, {
+                options = {
+                    {
+                    event = 'angelicxs-YachtHeist:ReleaseTrolly',
+                    icon = 'fas fa-terminal',
+                    label = Config.Lang['ReleaseTrolly'],
+                    temp = 'trap',
+                    canInteract = function()
+                        return TrollyUp
+                    end,
+                    },
+                },
+                distance = 2.5
+            })  
+            exports[Config.ThirdEyeName]:AddBoxZone("YachtRareSpot", Config.RareLootSpot, 1.5, 1.5, {
+                name= "YachtRareSpot",
+                heading = 0.0,
+                debugPoly=false,
+                minZ = Config.RareLootSpot.z-1.5,
+                maxZ = Config.RareLootSpot.z+1.5,
+                }, {
+                options = {
+                    {
+                        icon = 'fas fa-hand',
+                        label = Config.Lang['lootTrolly'],
+                        canInteract = function()
+                            return RareLoot
+                        end,
+                        action = function()
+                            BonusLoot("YachtRareSpot")
+                        end,
+                    },
+                },
+                distance = 2.5
+            }) 
+        end
+    end
+    if Config.Use3DText then
+        while true do
+            local Sleep = 2000
+            local Player = PlayerPedId()
+            local Pos = GetEntityCoords(Player)
+            local Dist = #(Pos - vector3(Config.StartPed.x, Config.StartPed.y, Config.StartPed.z))
+            if Dist <= 25 then
+                Sleep = 500
+                if Dist <= 3 then
+                    Sleep = 0
+                    DrawText3Ds(Config.StartPed.x, Config.StartPed.y, Config.StartPed.z, Config.Lang['request'])
+                    if IsControlJustReleased(0, 38) then
+                        TriggerEvent('angelicxs-YachtHeist:RobberyCheck')
+                    end
+                end
+            end
+            Wait(Sleep)
+        end
+    end
 end)
 
 -- Starting NPC Spawn
@@ -136,35 +346,13 @@ CreateThread(function()
                 DeleteEntity(StartNPC)
                 PedSpawned = false
                 if Config.UseThirdEye then
-		        if Config.ThirdEyeName == 'ox_target' then
-            			exports.ox_target:removeZone('YachtNPC')
-        		else
-            			exports[Config.ThirdEyeName]:RemoveZone('YachtNPC')
-        		end
+                    if Config.ThirdEyeName ~= 'ox_target' then
+                        exports[Config.ThirdEyeName]:RemoveZone('YachtNPC')
+                    end
                 end
             end
         end
         Wait(2000)
-    end
-end)
-
-CreateThread(function()
-    while Config.Use3DText do
-        local Sleep = 2000
-        local Player = PlayerPedId()
-        local Pos = GetEntityCoords(Player)
-        local Dist = #(Pos - vector3(Config.StartPed.x, Config.StartPed.y, Config.StartPed.z))
-        if Dist <= 50 then
-            Sleep = 500
-            if Dist <= 3 then
-                Sleep = 0
-                DrawText3Ds(Config.StartPed.x, Config.StartPed.y, Config.StartPed.z, Config.Lang['request'])
-                if IsControlJustReleased(0, 38) then
-                    TriggerEvent('angelicxs-YachtHeist:RobberyCheck')
-                end
-            end
-        end
-        Wait(Sleep)
     end
 end)
 
@@ -224,14 +412,14 @@ RegisterNetEvent('angelicxs-YachtHeist:RobberyCheck', function()
 
             if StartRobbery then
                 GlobalJob = true
-                TriggerEvent('angelicxs-YachtHeist:Client:HeistStart')
+                TriggerServerEvent('angelicxs-YachtHeist:Server:Counter')
                 TriggerEvent('angelicxs-YachtHeist:Notify', Config.Lang['startHeist'], Config.LangType['info'])
             else
                 TriggerEvent('angelicxs-YachtHeist:Notify', Config.Lang['mincops'], Config.LangType['error'])
             end
         else
             GlobalJob = true
-            TriggerEvent('angelicxs-YachtHeist:Client:HeistStart')
+            TriggerServerEvent('angelicxs-YachtHeist:Server:Counter')
             TriggerEvent('angelicxs-YachtHeist:Notify', Config.Lang['startHeist'], Config.LangType['info'])
         end
     else
@@ -240,11 +428,10 @@ RegisterNetEvent('angelicxs-YachtHeist:RobberyCheck', function()
 end)
 
 RegisterNetEvent('angelicxs-YachtHeist:GlobalJobSync', function()
-    E1 = true
-    E2 = true
-    E3 = true
-    E4 = true
-    GlobalJob = true    
+    GlobalJob = true
+    for Engine, Data in pairs (EngineData) do 
+        Data.active = true
+    end
     while GlobalJob do
         TriggerServerEvent('angelicxs-YachtHeist:Server:GlobalJobSync', true)
         if not GlobalJob then
@@ -263,98 +450,30 @@ RegisterNetEvent('angelicxs-YachtHeist:Client:GlobalJobSync', function(status)
     end
 end)
 
-RegisterNetEvent('angelicxs-YachtHeist:Client:HeistStart', function()
-    if GlobalJob then
-        TriggerServerEvent('angelicxs-YachtHeist:Server:Counter')
-        TriggerEvent('angelicxs-YachtHeist:GlobalJobSync')
-    end
-end)
-
-
-
 RegisterNetEvent('angelicxs-YachtHeist:Client:EngineLocations', function()
-    if Config.UseThirdEye then
-        for engine, location in pairs (EngineTarget) do 
-            if Config.ThirdEyeName == 'ox_target' then
-                oxTargets['YachtEngine'..engine] = exports.ox_target:addBoxZone({
-                    coords = location,
-                    size = vec3(5, 4, 3),
-                    rotation = 69,
-                    debug = drawZones,
-                    options = {
-                        {
-                            name = 'YachtEngine'..engine,
-                            event = 'angelicxs-YachtHeist:DisableEngine',
-                            icon = 'fas fa-engine',
-                            label = Config.Lang['EngineDisable'],
-                            engine = engine,
-                            name = 'YachtEngine'..engine
-                        }
-                    }
-                })
-            else
-                exports[Config.ThirdEyeName]:AddBoxZone('YachtEngine'..engine, location, 5, 4, {
-                    name='YachtEngine'..engine,
-                    heading = 69.0,
-                    debugPoly=false,
-                    minZ = 1.58,
-                    maxZ = 4.56
-                }, {
-                    options = {
-                        {
-                        event = 'angelicxs-YachtHeist:DisableEngine',
-                        icon = 'fas fa-engine',
-                        label = Config.Lang['EngineDisable'],
-                        engine = engine,
-                        name = 'YachtEngine'..engine
-                        },
-                    },
-                    distance = 2.5
-                })     
-            end
-        end 
-    elseif Config.Use3DText then
-        while true do 
-            local Sleep = 2000
-            local Player = PlayerPedId()
-            local Pos = GetEntityCoords(Player)
-            local nearEngine = false
-            local data = {}
-            local location
-            for engine, v in pairs (Engine3D) do 
-                local allowed = true
-                local name = tostring('YachtEngine'..engine)
-                if name == 'YachtEngine1' and not E1 then
-                    allowed = false
-                elseif name == 'YachtEngine2' and not E2  then
-                    allowed = false
-                elseif name == 'YachtEngine3' and not E3 then
-                    allowed = false
-                elseif name == 'YachtEngine4' and not E4 then
-                    allowed = false
-                end
-                local Dist = #(Pos - vector3(v.Coords[1],v.Coords[2],v.Coords[3]))
-                if allowed then 
-                    if Dist <= 50 then
+    Wait(1000)
+    if Config.Use3DText then
+        for Engine, Data in pairs (EngineData) do 
+            CreateThread(function()
+                while Data.active do 
+                    local Sleep = 2000
+                    local Pos = GetEntityCoords(PlayerPedId())
+                    local Dist = #(Pos - Data.text)
+                    if Dist <= 20 then
                         Sleep = 500
                         if Dist <= 3 then
                             Sleep = 0
-                            nearEngine = true
-                            data.name = name
-                            data.engine = engine
-                            location = v
-                            break
+                            DrawText3Ds(Data.text.x, Data.text.y, Data.text.z, Config.Lang['EngineDisable3D'])
+                            if IsControlJustReleased(0, 38) then
+                                local data = {}
+                                data.engine = Engine
+                                TriggerEvent('angelicxs-YachtHeist:DisableEngine', data)
+                            end
                         end
-                    end
+                    end 
+                    Wait(Sleep)
                 end
-            end
-            if nearEngine then
-                DrawText3Ds(location.Coords[1],location.Coords[2],location.Coords[3], Config.Lang['EngineDisable'])
-                if IsControlJustReleased(0, 38) then
-                    TriggerEvent('angelicxs-YachtHeist:DisableEngine', data)
-                end
-            end
-            Wait(Sleep)
+            end)
         end
     end
 end)
@@ -362,23 +481,37 @@ end)
 RegisterNetEvent('angelicxs-YachtHeist:DisableEngine', function(data)
     if not PAlert then
         TriggerEvent('angelicxs-YachtHeist:PoliceAlert',GetEntityCoords(PlayerPedId()))
+        TriggerServerEvent('angelicxs-YachtHeist:Server:StatusSync', 1, true)
         PAlert = true
     end
-    local number = data.engine
-    local name = tostring(data.name)
-    local time = 20
-    if data.name == nil then return end
-    exports['ps-ui']:Maze(function(success)
+    if data.engine == nil then return end
+    local Destroyed = EngineDisabled + 1
+            TriggerServerEvent('angelicxs-YachtHeist:Server:EngineSync',data.engine, Destroyed)
+            --[[
+    exports['ps-ui']:Thermite(function(success)
         if success then
             local Destroyed = EngineDisabled + 1
-            TriggerServerEvent('angelicxs-YachtHeist:Server:EngineSync',data.name, Destroyed)
-	    if Destroyed == 4 then
+            TriggerServerEvent('angelicxs-YachtHeist:Server:EngineSync',data.engine, Destroyed)
+	        if Destroyed == 4 then
                 TriggerEvent('angelicxs-YachtHeist:Notify', Config.Lang['activeConsole'], Config.LangType['info'])
             end
         else
             TriggerServerEvent('angelicxs-YachtHeist:server:EngineWine', GetEntityCoords(PlayerPedId()))
         end
-    end, time)
+    end, 20, 5+EngineDisabled, 3) -- Time, Gridsize (5, 6, 7, 8, 9, 10), IncorrectBlocks
+    ]]
+end)
+
+RegisterNetEvent('angelicxs-YachtHeist:Client:StatusSync', function(variable, status, trolly)
+    if variable == 1 then
+        PAlert = status
+    elseif variable == 2 then
+        TrollyUp = status
+    elseif variable == 3 then
+        RareLoot = status
+    elseif variable == 4 then
+        trolleys[trolly]['active'] = status
+    end
 end)
 
 RegisterNetEvent('angelicxs-YachtHeist:client:EngineWine', function (pos)
@@ -388,100 +521,51 @@ end)
 
 RegisterNetEvent('angelicxs-YachtHeist:Client:EngineSync', function(name, disabled)
     if name == nil then return end
-    if Config.UseThirdEye then
-        if Config.ThirdEyeName == 'ox_target' then
-            exports.ox_target:removeZone(oxTargets[name])
-        else
-            exports[Config.ThirdEyeName]:RemoveZone(name)
-        end
-    end
-    if name == 'YachtEngine1' then
-        E1 = false
-    elseif name == 'YachtEngine2' then
-        E2 = false
-    elseif name == 'YachtEngine3' then
-        E3 = false
-    elseif name == 'YachtEngine4' then
-        E4 = false
-    end
+    EngineData[name]['active'] = false
     EngineDisabled = disabled
     TriggerEvent('angelicxs-YachtHeist:Console')
 end)
 
 RegisterNetEvent('angelicxs-YachtHeist:Console', function()
+
     if EngineDisabled == 4 then
-        if Config.UseThirdEye then
-            if Config.ThirdEyeName == 'ox_target' then
-                oxTargets['YachtEngineConsole'] = exports.ox_target:addBoxZone({
-                    coords = Console,
-                    size = vec3(3, 2, 3),
-                    rotation = 74,
-                    debug = drawZones,
-                    options = {
-                        {
-                            name = 'YachtEngineConsole',
-                            event = 'angelicxs-YachtHeist:ReleaseTrolly',
-                            icon = 'fas fa-terminal',
-                            label = Config.Lang['ReleaseTrolly'],
-                            temp = 'trap'
-                        }
-                    }
-                })
-            else
-                exports[Config.ThirdEyeName]:AddBoxZone('YachtEngineConsole', Console, 3, 2, {
-                    name='YachtEngineConsole',
-                    heading = 74.0,
-                    debugPoly=false,
-                    minZ = 1.58,
-                    maxZ = 4.56
-                    }, {
-                    options = {
-                        {
-                        event = 'angelicxs-YachtHeist:ReleaseTrolly',
-                        icon = 'fas fa-terminal',
-                        label = Config.Lang['ReleaseTrolly'],
-                        temp = 'trap'
-                        },
-                    },
-                    distance = 2.5
-                })
-            end
-        end
-        while Config.Use3DText do 
-            local Sleep = 2000
-            local Player = PlayerPedId()
-            local Pos = GetEntityCoords(Player)
-            local Loc = Console
-            local Dist = #(Pos - Loc)
-            if Dist <= 25 then
-                Sleep = 500
-                if Dist <= 3 then
-                    Sleep = 0
-                    DrawText3Ds(Loc.x,Loc.y,Loc.z, Config.Lang['requestTrolley'])
-                    if IsControlJustReleased(0, 38) then
-                        local data = {temp = 'trap'}
-                        TriggerEvent('angelicxs-YachtHeist:ReleaseTrolly', data)
-                        break
+        TriggerServerEvent('angelicxs-YachtHeist:Server:StatusSync', 2, true)
+        TriggerServerEvent('angelicxs-YachtHeist:Server:StatusSync', 3, true)
+        Wait(1000)
+        if Config.Use3DText then
+            while true do 
+                local Sleep = 2000
+                local Player = PlayerPedId()
+                local Pos = GetEntityCoords(Player)
+                local Dist = #(Pos - Console)
+                if Dist <= 25 then
+                    Sleep = 500
+                    if Dist <= 3 then
+                        Sleep = 0
+                        DrawText3Ds(Console.x,Console.y,Console.z, Config.Lang['requestTrolley'])
+                        if IsControlJustReleased(0, 38) then
+                            local data = {temp = 'trap'}
+                            TriggerEvent('angelicxs-YachtHeist:ReleaseTrolly', data)
+                            break
+                        end
                     end
                 end
+                if not GlobalJob or not TrollyUp then
+                    break
+                end
+                Wait(Sleep)
             end
-            if not GlobalJob then
-                break
-            end
-            Wait(Sleep)
         end
     end
 end)
-
-
 
 RegisterNetEvent('angelicxs-YachtHeist:ReleaseTrolly', function(data)
     if data.temp ~= 'trap' then
         TriggerServerEvent('angelicxs-YachtHeist:ThatIsAThing')
     else
-        if not TrollyUp then
+        if TrollyUp then
             TriggerEvent('angelicxs-YachtHeist:Notify', Config.Lang['ReleaseedTrolly'], Config.LangType['info'])
-            TrollyUp = true
+            TriggerServerEvent('angelicxs-YachtHeist:Server:StatusSync', 2, false)
             for k,v in pairs(trolleys) do
                 local loc = v.coords
                 local TrolleyLoot = math.random(1,100)
@@ -491,31 +575,23 @@ RegisterNetEvent('angelicxs-YachtHeist:ReleaseTrolly', function(data)
                     TriggerServerEvent('angelicxs-YachtHeist:Server:TrolleySync', loc, k, 269934519)  -- Cash
                 end
             end
+        else
+            TriggerEvent('angelicxs-YachtHeist:Notify', Config.Lang['allDown'], Config.LangType['error'])
         end
-        TriggerEvent('angelicxs-YachtHeist:Notify', Config.Lang['allDown'], Config.LangType['error'])
     end
 end)
 
 RegisterNetEvent('angelicxs-YachtHeist:Client:TrolleySync', function(loc, k, model)
-    if Config.UseThirdEye then
-        if Config.ThirdEyeName == 'ox_target' then
-            exports.ox_target:removeZone(oxTargets['YachtEngineConsole'])
-        else
-            exports[Config.ThirdEyeName]:RemoveZone("YachtEngineConsole")
-        end
-    end
     if not loc or not k or not model then
         TriggerServerEvent('angelicxs-YachtHeist:ThatIsAThing')
     end
 	loadModel(model)
     if k == 1 then
-        TrollyUp = true
         Trolley1 = CreateObject(model, loc.x, loc.y, loc.z, 1, 0, 0)
         SetEntityHeading(Trolley1, loc.w)
         trolleys[k]['model'] = model
         TrollyLoot3D(k)
     elseif k == 2 then
-        TrollyUp = true
         Trolley2 = CreateObject(model, loc.x, loc.y, loc.z, 1, 0, 0)
         SetEntityHeading(Trolley2, loc.w)
         trolleys[k]['model'] = model
@@ -525,221 +601,72 @@ RegisterNetEvent('angelicxs-YachtHeist:Client:TrolleySync', function(loc, k, mod
         return
     end
 	SetModelAsNoLongerNeeded(model)
-    if Config.UseThirdEye then
-        for i = 1, #Config.BonusLootSpots do
-            local nameSpot = tostring('bonusloot'..Config.BonusLootSpots[i])
-            if Config.ThirdEyeName == 'ox_target' then
-                oxTargets[nameSpot] = exports.ox_target:addBoxZone({
-                    coords = Config.BonusLootSpots[i],
-                    size = vec3(1.5, 1.5, 3),
-                    rotation = 0,
-                    debug = drawZones,
-                    options = {
-                        {
-                            name = nameSpot,
-                            event = 'angelicxs-YachtHeist:BonusLoot',
-                            icon = 'fas fa-hand',
-                            label = Config.Lang['lootTrolly'],
-                            amount = 'trapcard',
-                            temp = nameSpot,
-                        }
-                    }
-                })
-            else
-                exports[Config.ThirdEyeName]:AddBoxZone(nameSpot, Config.BonusLootSpots[i], 1.5, 1.5, {
-                    name = nameSpot,
-                    heading = 0.0,
-                    debugPoly=false,
-                    minZ = Config.BonusLootSpots[i].z-1.5,
-                    maxZ = Config.BonusLootSpots[i].z+1.5,
-                    }, {
-                    options = {
-                        {
-                        event = 'angelicxs-YachtHeist:BonusLoot',
-                        icon = 'fas fa-hand',
-                        label = Config.Lang['lootTrolly'],
-                        amount = 'trapcard',
-                        temp = nameSpot,
-                        },
-                    },
-                    distance = 2.5
-                })
-            end
-        end
-        if Config.ThirdEyeName == 'ox_target' then
-            oxTargets['YachtRareSpot'] = exports.ox_target:addBoxZone({
-                coords = Config.RareLootSpot,
-                size = vec3(1.5, 1.5, 3),
-                rotation = 0,
-                debug = drawZones,
-                options = {
-                    {
-                        name = 'YachtRareSpot',
-                        event = 'angelicxs-YachtHeist:BonusLoot',
-                        icon = 'fas fa-hand',
-                        label = Config.Lang['lootTrolly'],
-                        amount = 'trapcard',
-                        temp = "YachtRareSpot",
-                    }
-                }
-            })
-        else
-            exports[Config.ThirdEyeName]:AddBoxZone("YachtRareSpot", Config.RareLootSpot, 1.5, 1.5, {
-                name= "YachtRareSpot",
-                heading = 0.0,
-                debugPoly=false,
-                minZ = Config.RareLootSpot.z-1.5,
-                maxZ = Config.RareLootSpot.z+1.5,
-                }, {
-                options = {
-                    {
-                    event = 'angelicxs-YachtHeist:BonusLoot',
-                    icon = 'fas fa-hand',
-                    label = Config.Lang['lootTrolly'],
-                    amount = 'trapcard',
-                    temp = "YachtRareSpot",
-                    },
-                },
-                distance = 2.5
-            })
-        end
+    for Number, Data in pairs (Config.BonusLootSpots) do 
+        Data.active = true
     end
-end)
-
-RegisterNetEvent('angelicxs-YachtHeist:Client:ThirdEyeSync', function(data)
-    if data then
-        if Config.ThirdEyeName == 'ox_target' then
-            exports.ox_target:removeZone(oxTargets[data])
-        else
-            exports[Config.ThirdEyeName]:RemoveZone(data)
-        end
-    end
-end)
-
-RegisterNetEvent('angelicxs-YachtHeist:BonusLoot', function(data)
-    if data.amount == 'trapcard' then
-        TriggerServerEvent('angelicxs-YachtHeist:Server:ThirdEyeSync', data.temp)
-        if data.temp == "YachtRareSpot" then
-            exports['ps-ui']:VarHack(function(success)
-                if success then
-                    LootAnim()
-                    Wait(5500)
-                    TriggerServerEvent('angelicxs-YachtHeist:Server:BonusLoot', "YachtRareSpot")
+    if Config.Use3DText then 
+        for Number, Data in pairs (Config.BonusLootSpots) do 
+            CreateThread(function()
+                while Data.active do
+                    local Sleep = 2000
+                    local Player = PlayerPedId()
+                    local Pos = GetEntityCoords(Player)
+                    local Dist = #(Pos - Data.coord)
+                    if Dist <= 20 then
+                        Sleep = 500
+                        if Dist <= 2 then
+                            Sleep = 0
+                            DrawText3Ds(Data.coord.x, Data.coord.y, Data.coord.z, Config.Lang['lootTrolly3d'])
+                            if IsControlJustReleased(0, 38) then
+                                BonusLoot(Number)
+                            end
+                        end
+                    end 
+                    if not Data.active then
+                        break
+                    end
+                    Wait(Sleep)
                 end
-             end, 2, 3) -- Number of Blocks, Time (seconds)
-        else
-            LootAnim()
-            Wait(5500)
-            TriggerServerEvent('angelicxs-YachtHeist:Server:BonusLoot', 'Bonus')
+            end)
         end
-    else
-        TriggerServerEvent('angelicxs-YachtHeist:ThatIsAThing')
+        while RareLoot do
+            local Sleep = 2000
+            local Player = PlayerPedId()
+            local Pos = GetEntityCoords(Player)
+            local Dist = #(Pos - Config.RareLootSpot)
+            if Dist <= 20 then
+                Sleep = 500
+                if Dist <= 3 then
+                    Sleep = 0
+                    DrawText3Ds(Config.RareLootSpot.x, Config.RareLootSpot.y, Config.RareLootSpot.z, Config.Lang['lootTrolly3d'])
+                    if IsControlJustReleased(0, 38) then
+                        BonusLoot('YachtRareSpot')
+                    end
+                end
+            end 
+            if not RareLoot then
+                break
+            end
+            Wait(Sleep)
+        end
     end
 end)
 
-function LootAnim()
-    local Player = PlayerPedId()
-    FreezeEntityPosition(Player, true)
-    RequestAnimDict("anim@amb@clubhouse@tutorial@bkr_tut_ig3@")
-    while not HasAnimDictLoaded("anim@amb@clubhouse@tutorial@bkr_tut_ig3@") do
-        Wait(10)
-    end
-    TaskPlayAnim(Player,"anim@amb@clubhouse@tutorial@bkr_tut_ig3@","machinic_loop_mechandplayer",1.0, -1.0, -1, 49, 0, 0, 0, 0)
-    Wait(5500)	
-    ClearPedTasks(Player)
-    FreezeEntityPosition(Player, false)
-    RemoveAnimDict("anim@amb@clubhouse@tutorial@bkr_tut_ig3@")
-end
-
-function TrollyLoot3D(k)
-    local TCoord = vector3(trolleys[k]['coords'].x, trolleys[k]['coords'].y, trolleys[k]['coords'].z)
-    if Config.UseThirdEye then
-        if Config.ThirdEyeName == 'ox_target' then
-            oxTargets['Trolley'..k] = exports.ox_target:addBoxZone({
-                coords = TCoord,
-                size = vec3(0.9, 1.1, 2.5),
-                rotation = trolleys[k]['coords'].w,
-                debug = drawZones,
-                options = {
-                    {
-                        name = 'Trolley'..k,
-                        event = 'angelicxs-YachtHeist:LootTrolly',
-                        icon = 'fas fa-hand-paper',
-                        label = Config.Lang['lootTrolly'],
-                    }
-                }
-            })
-        else
-            exports[Config.ThirdEyeName]:AddBoxZone('Trolley'..k, TCoord, 0.9, 1.1, {  
-                name = 'Trolley'..k, 
-                heading = trolleys[k]['coords'].w,
-                debugPoly = false,
-                minZ = trolleys[k]['coords'].z-1,
-                maxZ = trolleys[k]['coords'].z+1.5,
-                }, {
-                options = { 
-                    { 
-                        type = 'client',
-                        event = 'angelicxs-YachtHeist:LootTrolly',
-                        icon = 'fas fa-hand-paper',
-                        label = Config.Lang['lootTrolly'],
-                    }
-                },
-                distance = 2,
-            })
-        end
-    end
-    if Config.Use3DText then
-	CreateThread(function()
-	        while true do
-	            local ped = PlayerPedId()
-	            local pos = GetEntityCoords(ped)
-	            local Sleep = 2000
-	            local TDist = #(pos - TCoord)
-	            if TDist < 30 then 
-	                Sleep = 500
-	                if TDist < 5 then
-	                    Sleep = 0
-	                    if TDist < 2 then
-	                        DrawText3Ds(trolleys[k]['coords'].x, trolleys[k]['coords'].y, trolleys[k]['coords'].z + 1, Config.Lang['lootTrolly3d'])
-	                        if IsControlJustPressed(0, 38) then
-	                            TriggerEvent("angelicxs-YachtHeist:LootTrolly")
-	                        end
-	                    end
-	                end
-	            end
-	            if not GlobalJob or trolleys[k]['grabbed'] then
-	                break
-	            end
-	            Wait(Sleep)
-	        end
-	end)
-    end
-end
-
-RegisterNetEvent('angelicxs-YachtHeist:Client:LootSync', function(k)
-    if k then 
-        if Config.UseThirdEye then
-            if Config.ThirdEyeName == 'ox_target' then
-                exports.ox_target:removeZone(oxTargets['Trolley'..k])
-            else
-                exports[Config.ThirdEyeName]:RemoveZone('Trolley'..k)
-            end
-        end
-        trolleys[k]['grabbed'] = true
-    end
+RegisterNetEvent('angelicxs-YachtHeist:Client:BonusLootSync', function(name)
+    if name == nil then return end
+    Config.BonusLootSpots[name]['active'] = false
 end)
 
 RegisterNetEvent('angelicxs-YachtHeist:LootTrolly', function()
     local ped = PlayerPedId()
     local pos = GetEntityCoords(ped)
     for k,v in pairs(trolleys) do
-        if not v.grabbed then
+        if not v.actve then
             local coords =  vector3(v.coords.x, v.coords.y, v.coords.z)
             local TrolleyDist = #(pos - coords)
             if TrolleyDist <= 2 then
                 LocalPlayer.state:set('inv_busy', true, true) -- Busy
-                TriggerServerEvent('angelicxs-YachtHeist:Server:LootSync', k, true)
+                TriggerServerEvent('angelicxs-YachtHeist:Server:StatusSync', 4, false, k)
                 local pedRotation = vector3(0.0, 0.0, 0.0)
                 local trollyModel = v.model
                 local animDict = 'anim@heists@ornate_bank@grab_cash'
@@ -842,28 +769,18 @@ end)
 RegisterNetEvent('angelicxs-YachtHeist:Reset', function(tolerance)
     if tolerance == 'ok' then
         GlobalJob = false
-	PAlert = false
-        if Config.UseThirdEye then
-            if Config.ThirdEyeName == 'ox_target' then
-                for engine, location in pairs (EngineTarget) do 
-                    exports.ox_target:removeZone(oxTargets['YachtEngine'..engine])
-                end
-                for i = 1, #Config.BonusLootSpots do
-                    exports.ox_target:removeZone(oxTargets[Config.BonusLootSpots[i]])
-                end
-                exports.ox_target:removeZone(oxTargets["YachtRareSpot"])
-                exports.ox_target:removeZone(oxTargets["YachtEngineConsole"])
-            else
-                for engine, location in pairs (EngineTarget) do 
-                    exports[Config.ThirdEyeName]:RemoveZone('YachtEngine'..engine)
-                end
-                for i = 1, #Config.BonusLootSpots do
-                    exports[Config.ThirdEyeName]:RemoveZone(Config.BonusLootSpots[i])
-                end
-                exports[Config.ThirdEyeName]:RemoveZone("YachtRareSpot")
-                exports[Config.ThirdEyeName]:RemoveZone("YachtEngineConsole")    
-            end
+	    PAlert = false
+        TrollyUp = false
+        for Number, Data in pairs (Config.BonusLootSpots) do 
+            Data.active = false
         end
+        for Number, Data in pairs (trolleys) do 
+            Data.active = false
+        end
+        for Engine, Data in pairs (EngineData) do 
+            Data.active = false
+        end
+        RareLoot = false
         if DoesEntityExist(Trolley1) then
             DeleteEntity(Trolley1)
             DeleteObject(Trolley1)
@@ -880,6 +797,69 @@ RegisterNetEvent('angelicxs-YachtHeist:Reset', function(tolerance)
 end)
 
 -- Functions
+function TrollyLoot3D(k)
+    TriggerServerEvent('angelicxs-YachtHeist:Server:StatusSync', 4, true, k)
+    if Config.Use3DText then
+        Wait(1000)
+        local TCoord = vector3(trolleys[k]['coords'].x, trolleys[k]['coords'].y, trolleys[k]['coords'].z)
+	    CreateThread(function()
+	        while true do
+	            local ped = PlayerPedId()
+	            local pos = GetEntityCoords(ped)
+	            local Sleep = 2000
+	            local TDist = #(pos - TCoord)
+	            if TDist < 30 then 
+	                Sleep = 500
+	                if TDist < 5 then
+	                    Sleep = 0
+	                    if TDist < 2 then
+	                        DrawText3Ds(trolleys[k]['coords'].x, trolleys[k]['coords'].y, trolleys[k]['coords'].z + 1, Config.Lang['lootTrolly3d'])
+	                        if IsControlJustPressed(0, 38) then
+	                            TriggerEvent("angelicxs-YachtHeist:LootTrolly")
+	                        end
+	                    end
+	                end
+	            end
+	            if not GlobalJob or not trolleys[k]['active'] then
+	                break
+	            end
+	            Wait(Sleep)
+	        end
+	    end)
+    end
+end
+
+function BonusLoot(data)
+    if data == "YachtRareSpot" then
+        exports['ps-ui']:VarHack(function(success)
+            if success then
+                TriggerServerEvent('angelicxs-YachtHeist:Server:StatusSync', 3, false)
+                LootAnim()
+                Wait(5500)
+                TriggerServerEvent('angelicxs-YachtHeist:Server:BonusLoot', data)
+            end
+        end, 2, 3) -- Number of Blocks, Time (seconds)
+    else
+        TriggerServerEvent('angelicxs-YachtHeist:Server:BonusLootSync', data)
+        LootAnim()
+        Wait(5500)
+        TriggerServerEvent('angelicxs-YachtHeist:Server:BonusLoot', 'Bonus')
+    end
+end
+
+function LootAnim()
+    local Player = PlayerPedId()
+    FreezeEntityPosition(Player, true)
+    RequestAnimDict("anim@amb@clubhouse@tutorial@bkr_tut_ig3@")
+    while not HasAnimDictLoaded("anim@amb@clubhouse@tutorial@bkr_tut_ig3@") do
+        Wait(10)
+    end
+    TaskPlayAnim(Player,"anim@amb@clubhouse@tutorial@bkr_tut_ig3@","machinic_loop_mechandplayer",1.0, -1.0, -1, 49, 0, 0, 0, 0)
+    Wait(5500)	
+    ClearPedTasks(Player)
+    FreezeEntityPosition(Player, false)
+    RemoveAnimDict("anim@amb@clubhouse@tutorial@bkr_tut_ig3@")
+end
 
 function LawEnforcement()
     for i = 1, #Config.LEOJobName do
@@ -939,30 +919,19 @@ end
 AddEventHandler('onResourceStop', function(resource)
     if GetCurrentResourceName() == resource then
         GlobalJob = false
+	    PAlert = false
+        TrollyUp = false
         if DoesEntityExist(StartNPC) then
             DeleteEntity(StartNPC)
         end 
-        if Config.UseThirdEye then
-            if Config.ThirdEyeName == 'ox_target' then
-                for engine, location in pairs (EngineTarget) do 
-                    exports.ox_target:removeZone(oxTargets['YachtEngine'..engine])
-                end
-                for i = 1, #Config.BonusLootSpots do
-                    exports.ox_target:removeZone(oxTargets['bonusloot'..Config.BonusLootSpots[i]])
-                end
-                exports.ox_target:removeZone(oxTargets["YachtRareSpot"])
-                exports.ox_target:removeZone(oxTargets["YachtEngineConsole"])
-            else
-                exports[Config.ThirdEyeName]:RemoveZone('YachtNPC')
-                for engine, location in pairs (EngineTarget) do 
-                    exports[Config.ThirdEyeName]:RemoveZone('YachtEngine'..engine)
-                end
-                for i = 1, #Config.BonusLootSpots do
-                    exports[Config.ThirdEyeName]:RemoveZone('bonusloot'..Config.BonusLootSpots[i])
-                end
-                exports[Config.ThirdEyeName]:RemoveZone("YachtRareSpot")
-                exports[Config.ThirdEyeName]:RemoveZone("YachtEngineConsole")    
-            end       
+        for Number, Data in pairs (Config.BonusLootSpots) do 
+            Data.active = false
+        end
+        for Number, Data in pairs (trolleys) do 
+            Data.active = false
+        end
+        for Engine, Data in pairs (EngineData) do 
+            Data.active = false
         end
         if DoesEntityExist(Trolley1) then
             DeleteEntity(Trolley1)
