@@ -12,7 +12,7 @@ Config = {}
 
 
 Config.UseESX = false						-- Use ESX Framework (GO TO FXMANIFEST AND UNCOMMENT '@es_extended/imports.lua' )
-Config.UseQBCore = true					-- Use QBCore Framework (Ignored if Config.UseESX = true)
+Config.UseQBCore = true						-- Use QBCore Framework (Ignored if Config.UseESX = true)
 
 Config.UseCustomNotify = false				-- Use a custom notification script, must complete event below.
 
@@ -23,36 +23,38 @@ AddEventHandler('angelicxs-YachtHeist:CustomNotify', function(message, type)
 end)
 
 -- Visual Preference
-Config.Use3DText = false 					-- Use 3D text for NPC interactions; only turn to false if Config.UseThirdEye is turned on and IS working.
+Config.Use3DText = true 					-- Use 3D text for NPC interactions; only turn to false if Config.UseThirdEye is turned on and IS working.
 Config.UseThirdEye = true 					-- Enables using a third eye (third eye requires the following arguments debugPoly, useZ, options {event, icon, label}, distance)
 Config.ThirdEyeName = 'qb-target' 			-- Name of third eye aplication
 
 --LEO Configuration
-Config.RequireMinimumLEO = true 			-- When on will require a minimum number of LEOs to be available to start robbery
+Config.RequireMinimumLEO = false 			-- When on will require a minimum number of LEOs to be available to start robbery
 Config.RequiredNumberLEO = 4 				-- Minimum number of LEO needed for robbery to start when Config.RequireMinimumLEO = true
 Config.LEOJobName = {'police', 'bcso'} 		-- Job name of law enforcement officers
 Config.Cooldown = 90						-- How long until the heist is able to be redone after activating (in minutes)
 RegisterNetEvent('angelicxs-YachtHeist:PoliceAlert')
 AddEventHandler('angelicxs-YachtHeist:PoliceAlert', function(coords)
     -- TriggerEvent("police:client:policeAlert", coords, "illegal Hunting in area")
-    local data = exports['cd_dispatch']:GetPlayerInfo()
-    TriggerServerEvent('cd_dispatch:AddNotification', {
-        job_table = {'police', 'bcso'}, 
-        coords = coords,
-        title = '10-XXXX - Yacht Robbery',
-        message = 'Reports of a '..data.sex..' robbing a yacht near '..data.street, 
-        flash = 0,
-        unique_id = tostring(math.random(0000000,9999999)),
-        blip = {
-            sprite = 410, 
-            scale = 1.2, 
-            colour = 5,
-            flashes = false, 
-            text = '911 - Yacht Robbery',
-            time = (5*60*1000),
-            sound = 1,
-        }
-    })
+	--[[
+		local data = exports['cd_dispatch']:GetPlayerInfo()
+		TriggerServerEvent('cd_dispatch:AddNotification', {
+			job_table = {'police', 'bcso'}, 
+			coords = coords,
+			title = '10-XXXX - Yacht Robbery',
+			message = 'Reports of a '..data.sex..' robbing a yacht near '..data.street, 
+			flash = 0,
+			unique_id = tostring(math.random(0000000,9999999)),
+			blip = {
+				sprite = 410, 
+				scale = 1.2, 
+				colour = 5,
+				flashes = false, 
+				text = '911 - Yacht Robbery',
+				time = (5*60*1000),
+				sound = 1,
+			}
+		})
+	]]
 end)
 
 -- Reward Config
@@ -66,26 +68,24 @@ Config.MarkedBillMaxNumberAmount = 5		-- Maximum number of marked bills received
 Config.MarkedBillMin = 1000					-- Minimum value of marked bills
 Config.MarkedBillMax = 10000				-- Maximum value of marked bills
 
---- BONUS LOOT FOR Config.UseThirdEye = true ONLY
 Config.BonusLootSpots = {
-	vector3(-2077.28, -1022.23, 5.88),
-	vector3(-2078.78, -1016.27, 5.88),
-	vector3(-2084.71, -1013.65, 5.88),
-	vector3(-2089.3, -1009.75, 5.88),
-	vector3(-2095.78, -1007.94, 5.88),
-	vector3(-2097.74, -1015.94, 5.88),
-	vector3(-2107.76, -1014.24, 5.89),
-	vector3(-2094.26, -1015.02, 8.98),
-	vector3(-2085.35, -1014.71, 8.97),
-	vector3(-2087.57, -1021.51, 8.97),
-	vector3(-2077.17, -1020.28, 8.97),
-	vector3(-2057.0, -1023.27, 11.91),
-	vector3(-2059.17, -1029.94, 11.91),
-	vector3(-2075.21, -1025.65, 11.91),
-	vector3(-2102.73, -1014.31, 5.88),
-
-
+	B1 = {coord = vector3(-2077.28, -1022.23, 5.88), active = false},
+	B2 = {coord = vector3(-2078.78, -1016.27, 5.88), active = false},
+	B3 = {coord = vector3(-2084.71, -1013.65, 5.88), active = false},
+	B4 = {coord = vector3(-2089.3, -1009.75, 5.88), active = false},
+	B5 = {coord = vector3(-2095.78, -1007.94, 5.88), active = false},
+	B6 = {coord = vector3(-2097.74, -1015.94, 5.88), active = false},
+	B7 = {coord = vector3(-2107.76, -1014.24, 5.89), active = false},
+	B8 = {coord = vector3(-2094.26, -1015.02, 8.98), active = false},
+	B9 = {coord = vector3(-2085.35, -1014.71, 8.97), active = false},
+	B10 = {coord = vector3(-2087.57, -1021.51, 8.97), active = false},
+	B11 = {coord = vector3(-2077.17, -1020.28, 8.97), active = false},
+	B12 = {coord = vector3(-2057.0, -1023.27, 11.91), active = false},
+	B13 = {coord = vector3(-2059.17, -1029.94, 11.91), active = false},
+	B14 = {coord = vector3(-2075.21, -1025.65, 11.91), active = false},
+	B15 = {coord = vector3(-2102.73, -1014.31, 5.88), active = false},
 }
+
 Config.BonusLootItems = {
 	{name = "rolex", amount = 3},
 	{name = "diamond_ring", amount = 4},
@@ -102,7 +102,7 @@ Config.RareLootItemAmount = 1
 -- Starting Ped Config
 Config.StartPed = vector4(767.62, -1690.5, 37.55, 7.34)		-- Location for starting NPC
 Config.StartModel = 'u_m_m_streetart_01'                   	-- Model of starting NPC
-Config.StartBlip = false 				                	-- Enable Blip for starting NPC
+Config.StartBlip = true 				                	-- Enable Blip for starting NPC
 Config.StartBlipIcon = 410 			                    	-- Starting blip icon (if Config.StarBlip = true)
 Config.StartBlipColour = 50 			                	-- Colour of blip icon (if Config.StarBlip = true)
 Config.StartBlipText = 'Yacht Informant'                	-- Blip text on map (if Config.StarBlip = true)
@@ -157,6 +157,7 @@ Config.Lang = {
     ['working'] = 'Someone is working the yacht job right now.',
     ['mincops'] = 'No risk, no reward. Come back later!',
 	['EngineDisable'] = "Attempt to disable engine!",
+	['EngineDisable3D'] = "Press ~r~[E]~w~ to attempt to disable engine!",
 	['activeConsole'] = "The engines are down, activate the console at the back of the engine room!",
 	['ReleaseTrolly'] = "Release Money Carts",
 	['requestTrolley'] = 'Press ~r~[E]~w~ to release money carts.',
