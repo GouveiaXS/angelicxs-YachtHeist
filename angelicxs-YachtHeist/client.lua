@@ -485,9 +485,6 @@ RegisterNetEvent('angelicxs-YachtHeist:DisableEngine', function(data)
         PAlert = true
     end
     if data.engine == nil then return end
-    local Destroyed = EngineDisabled + 1
-            TriggerServerEvent('angelicxs-YachtHeist:Server:EngineSync',data.engine, Destroyed)
-            --[[
     exports['ps-ui']:Thermite(function(success)
         if success then
             local Destroyed = EngineDisabled + 1
@@ -499,7 +496,6 @@ RegisterNetEvent('angelicxs-YachtHeist:DisableEngine', function(data)
             TriggerServerEvent('angelicxs-YachtHeist:server:EngineWine', GetEntityCoords(PlayerPedId()))
         end
     end, 20, 5+EngineDisabled, 3) -- Time, Gridsize (5, 6, 7, 8, 9, 10), IncorrectBlocks
-    ]]
 end)
 
 RegisterNetEvent('angelicxs-YachtHeist:Client:StatusSync', function(variable, status, trolly)
