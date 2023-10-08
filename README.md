@@ -16,9 +16,7 @@ Heist Overview:
 
 3. After minigames are compelted and next step is initalized the lootable areas within the ship will open.
 
-4A. If NOT using a third-eye system they will only be able to loot the trolley's with money.
-
-4B. If using a third-eye system they will be able to explore the ship for additional loot.
+4. They will be able to explore the ship for additional loot.
 
 5. After the aloted time entire boat will be reset and job can be done again.
 
