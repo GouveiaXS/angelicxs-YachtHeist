@@ -1,7 +1,6 @@
 QBcore = nil
 local CD = Config.Cooldown
 
-
 if Config.UseESX then
     ESX = exports["es_extended"]:getSharedObject()
     TriggerEvent('qs-core:getSharedObject', function(obj) QS = obj end)
@@ -18,7 +17,7 @@ if Config.UseESX then
                 end
             end
         end
-        
+
         if cops >= Config.RequiredNumberLEO then
             cb(true)
         else
@@ -47,9 +46,7 @@ elseif Config.UseQBCore then
             cb(false)
         end	
     end)
-
 end
-
 
 RegisterNetEvent('angelicxs-YachtHeist:Server:TrolleyReward', function(Trolley, pos, coords, type)
 	local src = source
@@ -140,7 +137,7 @@ function generalloot(src)
                 TriggerClientEvent('inventory:client:ItemBox', src, QBCore.Shared.Items[reward.name], 'add')
                 TriggerEvent('qb-log:server:CreateLog', 'bankrobbery', 'Yacht Heist', 'green', 'Bonus Loot Received:\n'..reward.amount..' Item: '..reward.name..'\n**Person**:\n'..GetPlayerName(src))
             end
-            TriggerClientEvent('angelicxs-randombox:Notify',src, Config.Lang['gained']..reward.amount..' '..reward.name, Config.LangType['success'])
+            TriggerClientEvent('angelicxs-YachtHeist:Notify',src, Config.Lang['gained']..reward.amount..' '..reward.name, Config.LangType['success'])
             break
         end
     end
@@ -191,6 +188,7 @@ end
 
 RegisterServerEvent('angelicxs-YachtHeist:Server:Counter',function()
     CD = Config.Cooldown
+    TriggerClientEvent('angelicxs-YachtHeist:GlobalJobSync', -1)
     TriggerClientEvent('angelicxs-YachtHeist:Client:EngineLocations', -1)
     TriggerEvent('angelicxs-YachtHeist:Server:Guards')
     while true do
@@ -213,6 +211,10 @@ RegisterServerEvent('angelicxs-YachtHeist:Server:ThirdEyeSync', function(name)
     TriggerClientEvent('angelicxs-YachtHeist:Client:ThirdEyeSync', -1, name)
 end)
 
+RegisterServerEvent('angelicxs-YachtHeist:Server:StatusSync', function(variable, status, trolly)
+    TriggerClientEvent('angelicxs-YachtHeist:Client:StatusSync', -1, variable, status, trolly)
+end)
+
 RegisterServerEvent('angelicxs-YachtHeist:Server:EngineSync', function(name, disabled)
     TriggerClientEvent('angelicxs-YachtHeist:Client:EngineSync', -1, name, disabled)
 end)
@@ -221,8 +223,8 @@ RegisterServerEvent('angelicxs-YachtHeist:Server:TrolleySync', function(loc, k, 
     TriggerClientEvent('angelicxs-YachtHeist:Client:TrolleySync', -1, loc, k, model)
 end)
 
-RegisterServerEvent('angelicxs-YachtHeist:Server:LootSync', function(k)
-    TriggerClientEvent('angelicxs-YachtHeist:Client:LootSync', -1, k)
+RegisterServerEvent('angelicxs-YachtHeist:Server:BonusLootSync', function(k)
+    TriggerClientEvent('angelicxs-YachtHeist:Client:BonusLootSync', -1, k)
 end)
 
 RegisterNetEvent('angelicxs-YachtHeist:server:EngineWine', function(pos)
