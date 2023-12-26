@@ -69,7 +69,8 @@ RegisterNetEvent('angelicxs-YachtHeist:Server:TrolleyReward', function(Trolley, 
         if Number > 0 then
             if Config.UseESX then
                 Player = ESX.GetPlayerFromId(src)
-                Player.addInventoryItem(type, Number*info.worth, false)
+		Number = Number*info.worth
+                Player.addInventoryItem(type, Number, false)
             elseif Config.UseQBCore then
                 Player = QBCore.Functions.GetPlayer(src)
                 Player.Functions.AddItem(type, Number, false, info)
