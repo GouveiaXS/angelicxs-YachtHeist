@@ -3,7 +3,7 @@ game 'gta5'
 
 author 'AngelicXS'
 description 'Yacht Heist'
-version '1.3'
+version '1.3.1'
 
 client_script {
     'client.lua',
