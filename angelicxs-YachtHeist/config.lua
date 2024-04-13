@@ -63,8 +63,6 @@ Config.GoldBarName = 'goldbar'				-- Name of gold bar item
 Config.GoldBarMin = 10						-- Minimum number of gold bars recevied
 Config.GoldBarMax = 100						-- Maximum number of gold bars received
 Config.MarkedBillName = 'markedbills'		-- Name of marked bill item
-Config.MarkedBillMinNumberAmount = 1		-- Minimum number of marked bills received
-Config.MarkedBillMaxNumberAmount = 5		-- Maximum number of marked bills received
 Config.MarkedBillMin = 1000					-- Minimum value of marked bills
 Config.MarkedBillMax = 10000				-- Maximum value of marked bills
 
@@ -130,13 +128,8 @@ Config.GuardLocation = { 								-- Guard Location
 
 }
 
-Config.GuardType = { 									-- Guard models **Note the use of different gangs is intentional as they will start to fight each other as soon as the player interacts with them.
-    "g_f_y_lost_01",
-    "g_f_y_ballas_01",
-	'g_m_m_korboss_01',
-	'g_m_y_armgoon_02',
-	'g_m_y_lost_03',
-	'g_m_y_mexgoon_01',
+Config.GuardType = { 									-- Guard models
+    "mp_m_fibsec_01",
 }
 
 Config.GuardWeapon = { 									-- Guard weapons
@@ -153,7 +146,7 @@ Config.LangType = {
 Config.Lang = {
 	['AskJob'] = "Request Information On Yacht.",
 	['request'] = 'Press ~r~[E]~w~ to request information on the yacht.',
-	['startHeist'] = 'Some gangs are having a meet out on the yacht! Disable the engines, make some noise and loot it all!',
+	['startHeist'] = 'The FBI are raiding my yacht! Disable the engines and kill the cops, if you save my yacht from being taken the items on it are yours!',
     ['working'] = 'Someone is working the yacht job right now.',
     ['mincops'] = 'No risk, no reward. Come back later!',
 	['EngineDisable'] = "Attempt to disable engine!",
