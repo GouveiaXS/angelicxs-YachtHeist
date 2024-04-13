@@ -1,5 +1,8 @@
 QBcore = nil
 local CD = Config.Cooldown
+local target = false
+local activated = false
+local GuardList = {}
 
 if Config.UseESX then
     ESX = exports["es_extended"]:getSharedObject()
@@ -63,22 +66,21 @@ RegisterNetEvent('angelicxs-YachtHeist:Server:TrolleyReward', function(Trolley, 
             string = Config.Lang['goldBars']
         elseif Trolley == 'hei_prop_heist_cash_pile' then
             string = Config.Lang['markedBills']
-            Number = math.random(Config.MarkedBillMinNumberAmount, Config.MarkedBillMaxNumberAmount)
-            info = {worth = math.random(Config.MarkedBillMin, Config.MarkedBillMax)}
+            Number = math.random(Config.MarkedBillMin, Config.MarkedBillMax)
         end
         if Number > 0 then
             if Config.UseESX then
                 Player = ESX.GetPlayerFromId(src)
 		Number = Number*info.worth
-                Player.addInventoryItem(type, Number, false)
+                Player.addInventoryItem(type, Number)
             elseif Config.UseQBCore then
                 Player = QBCore.Functions.GetPlayer(src)
-                Player.Functions.AddItem(type, Number, false, info)
+                Player.Functions.AddItem(type, Number)
                 TriggerClientEvent('inventory:client:ItemBox', src, QBCore.Shared.Items[type], 'add')
                 if Trolley == 'ch_prop_gold_bar_01a' then 
                     TriggerEvent('qb-log:server:CreateLog', 'bankrobbery', 'Yacht Heist', 'green', 'Goldbars Received:\n'..Number..'\n**Person**:\n'..GetPlayerName(src))
                 elseif Trolley == 'hei_prop_heist_cash_pile' then 
-                    TriggerEvent('qb-log:server:CreateLog', 'bankrobbery', 'Yacht Heist', 'green', 'Marked Bills Received:\n'..Number..' worth $'..info.worth..'\n**Person**:\n'..GetPlayerName(src))
+                    TriggerEvent('qb-log:server:CreateLog', 'bankrobbery', 'Yacht Heist', 'green', 'Marked Bills Received:\nMarked Bills worth $'..Number..'\n**Person**:\n'..GetPlayerName(src))
                 end
             end
             TriggerClientEvent('angelicxs-YachtHeist:Notify', src, Config.Lang['gained'] .. Number .. string, Config.LangType['success'])
@@ -122,7 +124,6 @@ end)
 function generalloot(src)
     local List = Config.BonusLootItems
     local Number = 0
-    math.random()
     local Selection = math.random(1, #List)
     for i = 1, #List do
         local reward = List[i]
@@ -148,19 +149,28 @@ end
 --- Guard Spawner
 
 RegisterNetEvent('angelicxs-YachtHeist:Server:Guards', function()
+    if activated then return end
+    activated = true
     for i = 1, #Config.GuardLocation do
-        local Guard = Config.GuardLocation[i]
+        GuardList[i] = Config.GuardLocation[i]
         local type = GuardSelector(Config.GuardType)
         local weapon = GuardSelector(Config.GuardWeapon)
-        Guard = CreatePed(4, type, Config.GuardLocation[i].x, Config.GuardLocation[i].y, Config.GuardLocation[i].z, Config.GuardLocation[i].w, true, true)
-        SetPedArmour(Guard, Config.GuardArmour)
-        GiveWeaponToPed(Guard, weapon, 500)
+        GuardList[i] = CreatePed(4, type, Config.GuardLocation[i].x, Config.GuardLocation[i].y, Config.GuardLocation[i].z, Config.GuardLocation[i].w, true, true)
+        SetPedArmour(GuardList[i], Config.GuardArmour)
+        GiveWeaponToPed(GuardList[i], weapon, 200)
+        SetCurrentPedWeapon(GuardList[i], weapon, true)
         Wait(1000)
         CreateThread(function()
+            local task = false
             while true do
+                if not task and target then
+                    task = true
+                    TaskCombatPed(GuardList[i], target, 0, 16)
+                    SetCurrentPedWeapon(GuardList[i], weapon, true)
+                end
                 if CD == 0 then
-                    if DoesEntityExist(Guard) then
-                        DeleteEntity(Guard)
+                    if DoesEntityExist(GuardList[i]) then
+                        DeleteEntity(GuardList[i])
                         break
                     else
                         break
@@ -188,6 +198,7 @@ end
 -- CoolDown
 
 RegisterServerEvent('angelicxs-YachtHeist:Server:Counter',function()
+    target = false
     CD = Config.Cooldown
     TriggerClientEvent('angelicxs-YachtHeist:GlobalJobSync', -1)
     TriggerClientEvent('angelicxs-YachtHeist:Client:EngineLocations', -1)
@@ -200,7 +211,13 @@ RegisterServerEvent('angelicxs-YachtHeist:Server:Counter',function()
             break
         end
     end
+    activated = false
     TriggerClientEvent('angelicxs-YachtHeist:Reset', -1, 'ok')
+    for k, v in pairs (GuardList) do
+        if DoesEntityExist(v) then
+            DeleteEntity(v)
+        end
+    end
 end)
 
 -- Syncs
@@ -217,6 +234,9 @@ RegisterServerEvent('angelicxs-YachtHeist:Server:StatusSync', function(variable,
 end)
 
 RegisterServerEvent('angelicxs-YachtHeist:Server:EngineSync', function(name, disabled)
+    if disabled == 1 then
+        target = GetPlayerPed(source)
+    end
     TriggerClientEvent('angelicxs-YachtHeist:Client:EngineSync', -1, name, disabled)
 end)
 
@@ -238,5 +258,17 @@ RegisterServerEvent('angelicxs-YachtHeist:ThatIsAThing', function(server)
         DropPlayer(server, "Go hack somewhere else.")
     end
     DropPlayer(source, "Go hack somewhere else.")
+        
     Print("\n\n\n\nWARNING WARNING WARNING\nPlayer ID "..tostring(source)"/"..tostring(server).." was kicked for attempting to exploit angelicxs-YachtHeist. It is recommended you ban them.\nnWARNING WARNING WARNING\n\n\n\n")
+end)
+
+AddEventHandler('onResourceStop', function(resource)
+    if GetCurrentResourceName() == resource then
+        for k,v in pairs(GuardList)do
+            if DoesEntityExist(v) then
+                DeleteEntity(v)
+            end
+        end
+        GuardList = {}
+    end
 end)
